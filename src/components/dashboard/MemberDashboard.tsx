@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { DollarSign, ShoppingCart, Wallet, PlusCircle, Download, TrendingUp } from 'lucide-react';
 import type { MessSettings, Member, Expense, AuditLog } from '@shared/types';
+import { calculateAdjustedDailyRate } from '@shared/mess-utils';
 import { api } from '@/lib/api-client';
 import { getDeviceInfo } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -43,8 +44,11 @@ const MemberDashboard = ({ messState, currentUser }: MemberDashboardProps) => {
         return sum + allMyExpenses.filter(e => e.memberId === member.id && !e.period).reduce((s, e) => s + e.amount, 0);
     }, 0);
     const balance = totalContribution - totalSpent;
-    const remainingDays = messState.settings.totalDays - (new Date().getDate() - 1);
-    const adjustedDailyRate = remainingDays > 0 ? balance / remainingDays : 0;
+    const adjustedDailyRate = calculateAdjustedDailyRate(
+      balance,
+      messState.settings.cycleStartDate,
+      messState.settings.totalDays
+    );
     return { myCurrentExpenses, myTotalSpent, myBalance, adjustedDailyRate };
   }, [allMyExpenses, currentUser, messState]);
   const handleDownloadReport = () => {

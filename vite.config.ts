@@ -92,10 +92,16 @@ export default ({ mode }: { mode: string }) => {
     plugins: [react(), cloudflare(), watchDependenciesPlugin()],
     build: {
       minify: true,
-      sourcemap: true, // Use external source maps to fix Cloudflare deploy parsing
+      sourcemap: mode !== 'production',
       rollupOptions: {
         output: {
-          sourcemapExcludeSources: false, // Include original source in source maps
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-dropdown-menu'],
+            charts: ['recharts'],
+            utils: ['date-fns', 'zod', 'zustand'],
+          },
+          sourcemapExcludeSources: false,
         },
       },
     },
@@ -106,6 +112,8 @@ export default ({ mode }: { mode: string }) => {
     },
     server: {
       allowedHosts: true,
+      host: '0.0.0.0',
+      port: Number(env.PORT) || 3000,
     },
     resolve: {
       alias: {

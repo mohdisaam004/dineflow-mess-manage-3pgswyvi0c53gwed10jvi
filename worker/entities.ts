@@ -8,7 +8,10 @@ export class MessSettingsEntity extends Entity<MessSettings> {
     reducedContribution: 250,
     totalDays: 30,
     initialized: false,
+    currentPeriod: undefined,
+    cycleStartDate: undefined,
     superAdminPasswordHash: undefined,
+    memberAccessPinHash: undefined,
   };
   constructor(env: Env) {
     super(env, 'global');

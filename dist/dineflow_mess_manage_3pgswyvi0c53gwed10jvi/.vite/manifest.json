@@ -1,0 +1,24 @@
+{
+  "_charts-l0sNRNKZ.js": {
+    "file": "assets/charts-l0sNRNKZ.js",
+    "name": "charts"
+  },
+  "_ui-l0sNRNKZ.js": {
+    "file": "assets/ui-l0sNRNKZ.js",
+    "name": "ui"
+  },
+  "_utils-l0sNRNKZ.js": {
+    "file": "assets/utils-l0sNRNKZ.js",
+    "name": "utils"
+  },
+  "_vendor-l0sNRNKZ.js": {
+    "file": "assets/vendor-l0sNRNKZ.js",
+    "name": "vendor"
+  },
+  "virtual:cloudflare/worker-entry": {
+    "file": "index.js",
+    "name": "index",
+    "src": "virtual:cloudflare/worker-entry",
+    "isEntry": true
+  }
+}

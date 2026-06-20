@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Al Iqsha Mess</title>
+    <style>
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      #app-loader .icon {
+        width: 64px;
+        height: 64px;
+        background: #3b82f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      #app-loader .icon svg { color: white; }
+      #app-loader h1 { font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0; }
+      #app-loader p { font-size: 0.875rem; color: #6b7280; margin: 4px 0 0; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    </style>
+    <script type="module" crossorigin src="/assets/index-8ZqmfSfA.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-CahcyvEk.js">
+    <link rel="modulepreload" crossorigin href="/assets/ui-CKqbPNUb.js">
+    <link rel="modulepreload" crossorigin href="/assets/charts-7vXimRtt.js">
+    <link rel="modulepreload" crossorigin href="/assets/utils-C3Zj0v7a.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CXSAdwC_.css">
+  </head>
+  <body>
+    <div id="app-loader">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+          <path d="M7 2v20" />
+          <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+        </svg>
+      </div>
+      <h1>Al Iqsha Mess</h1>
+      <p>Loading...</p>
+    </div>
+    <div id="root"></div>
+    <script>
+        window.addEventListener('error', (event) => {
+          const isOurAppError = event.filename && event.filename.startsWith(window.location.origin);
+          if (isOurAppError) {
+            navigator.sendBeacon('/api/client-errors', JSON.stringify({
+              message: event.message,
+              url: window.location.href,
+              userAgent: navigator.userAgent,
+              source: event.filename,
+              lineno: event.lineno,
+              colno: event.colno,
+              stack: event.error ? event.error.stack : null,
+              timestamp: new Date().toISOString()
+            }));
+          }
+        }, true);
+    </script>
+  </body>
+</html>

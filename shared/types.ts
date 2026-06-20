@@ -30,7 +30,10 @@ export interface MessSettings {
   reducedContribution: number;
   totalDays: number;
   initialized: boolean;
+  currentPeriod?: string;
+  cycleStartDate?: string;
   superAdminPasswordHash?: string;
+  memberAccessPinHash?: string;
 }
 export type AuditLogEvent = 'login' | 'expense_created' | 'expense_updated' | 'expense_deleted' | 'member_created' | 'member_updated' | 'member_deleted' | 'report_download' | 'mess_reset';
 export interface AuditLog {

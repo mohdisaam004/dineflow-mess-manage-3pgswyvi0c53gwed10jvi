@@ -31,13 +31,15 @@ import type { AuditLog } from '@shared/types';
 interface AuditLogsTableProps {
   auditLogs: AuditLog[];
   onClearLogs?: (dateRange: DateRange) => void;
+  onClearAll?: () => void;
   onDownloadLogs?: (logs: AuditLog[]) => void;
 }
-const AuditLogsTable = ({ auditLogs, onClearLogs, onDownloadLogs }: AuditLogsTableProps) => {
+const AuditLogsTable = ({ auditLogs, onClearLogs, onClearAll, onDownloadLogs }: AuditLogsTableProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [eventFilter, setEventFilter] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [isConfirmAllOpen, setConfirmAllOpen] = useState(false);
   const formatEvent = (event: string) => {
     return event.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
@@ -72,6 +74,10 @@ const AuditLogsTable = ({ auditLogs, onClearLogs, onDownloadLogs }: AuditLogsTab
       onClearLogs(dateRange);
     }
     setConfirmOpen(false);
+  };
+  const handleClearAll = () => {
+    onClearAll?.();
+    setConfirmAllOpen(false);
   };
   return (
     <div>
@@ -130,7 +136,10 @@ const AuditLogsTable = ({ auditLogs, onClearLogs, onDownloadLogs }: AuditLogsTab
             <Download className="mr-2 h-4 w-4" /> Download
           </Button>
           <Button variant="destructive" onClick={() => setConfirmOpen(true)} disabled={!onClearLogs || !dateRange?.from || !dateRange?.to}>
-            <Trash2 className="mr-2 h-4 w-4" /> Clear
+            <Trash2 className="mr-2 h-4 w-4" /> Clear Range
+          </Button>
+          <Button variant="destructive" onClick={() => setConfirmAllOpen(true)} disabled={!onClearAll || auditLogs.length === 0}>
+            <Trash2 className="mr-2 h-4 w-4" /> Clear All
           </Button>
         </div>
       </div>
@@ -180,6 +189,22 @@ const AuditLogsTable = ({ auditLogs, onClearLogs, onDownloadLogs }: AuditLogsTab
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleClearLogs} className="bg-destructive hover:bg-destructive/90">
               Yes, Clear Logs
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={isConfirmAllOpen} onOpenChange={setConfirmAllOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all audit logs?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete every audit log in the system. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearAll} className="bg-destructive hover:bg-destructive/90">
+              Yes, Clear All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

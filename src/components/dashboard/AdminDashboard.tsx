@@ -9,6 +9,7 @@ import { api } from '@/lib/api-client';
 import { getDeviceInfo } from '@/lib/utils';
 import { useAuthStore } from '@/hooks/use-auth-store';
 import type { MessSettings, Member, Expense, AuditLog } from '@shared/types';
+import { calculateAdjustedDailyRate } from '@shared/mess-utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -36,7 +37,7 @@ interface AdminDashboardProps {
 const AdminDashboard = ({ messState, adminUser }: AdminDashboardProps) => {
   const queryClient = useQueryClient();
   const { role, member } = useAuthStore();
-  const isSuperAdmin = role === 'admin' && !member;
+  const isSuperAdmin = role === 'super_admin';
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [promotingMember, setPromotingMember] = useState<Member | null>(null);
@@ -44,7 +45,7 @@ const AdminDashboard = ({ messState, adminUser }: AdminDashboardProps) => {
   const [isChangePasswordOpen, setChangePasswordOpen] = useState(false);
   const [expenseFilters, setExpenseFilters] = useState<any>({ period: 'current' });
   const { data: expenses = [] } = useQuery<Expense[]>({
-    queryKey: ['expenses'], // Fetch all expenses once
+    queryKey: ['expenses', 'admin'],
     queryFn: () => api(`/api/expenses`),
     placeholderData: [],
   });
@@ -65,6 +66,7 @@ const AdminDashboard = ({ messState, adminUser }: AdminDashboardProps) => {
     onSuccess: () => {
       toast.success('Expense deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['messState'] });
     },
     onError: (err) => toast.error((err as Error).message),
   });
@@ -91,16 +93,32 @@ const AdminDashboard = ({ messState, adminUser }: AdminDashboardProps) => {
   const { mutate: clearAuditLogs } = useMutation({
     mutationFn: (dateRange: DateRange) => {
       const params = new URLSearchParams({
-        startDate: dateRange.from!.toISOString(),
-        endDate: dateRange.to!.toISOString(),
+        startDate: startOfDay(dateRange.from!).toISOString(),
+        endDate: endOfDay(dateRange.to!).toISOString(),
       });
-      return api(`/api/audit-logs?${params.toString()}`, { method: 'DELETE' });
+      return api<{ deletedCount: number }>(`/api/audit-logs?${params.toString()}`, { method: 'DELETE' });
     },
-    onSuccess: (data: any) => {
-      toast.success(`${data.deletedCount} audit logs cleared successfully.`);
+    onSuccess: (data) => {
+      if (data.deletedCount === 0) {
+        toast.info('No audit logs found in the selected date range.');
+      } else {
+        toast.success(`${data.deletedCount} audit log${data.deletedCount === 1 ? '' : 's'} cleared successfully.`);
+      }
       queryClient.invalidateQueries({ queryKey: ['messState'] });
     },
     onError: (err) => toast.error(`Failed to clear audit logs: ${(err as Error).message}`),
+  });
+  const { mutate: clearAllAuditLogs } = useMutation({
+    mutationFn: () => api<{ deletedCount: number }>('/api/audit-logs/all', { method: 'DELETE' }),
+    onSuccess: (data) => {
+      if (data.deletedCount === 0) {
+        toast.info('No audit logs to clear.');
+      } else {
+        toast.success(`All ${data.deletedCount} audit log${data.deletedCount === 1 ? '' : 's'} cleared.`);
+      }
+      queryClient.invalidateQueries({ queryKey: ['messState'] });
+    },
+    onError: (err) => toast.error(`Failed to clear all audit logs: ${(err as Error).message}`),
   });
   const memberMap = useMemo(() => new Map(messState.members.map((m) => [m.id, m.name])), [messState.members]);
   const filteredExpensesForReport = useMemo(() => {
@@ -140,8 +158,11 @@ const AdminDashboard = ({ messState, adminUser }: AdminDashboardProps) => {
       const memberBalance = m.contribution - totalExpenses;
       return { ...m, totalExpenses, balance: memberBalance };
     });
-    const remainingDays = messState.settings.totalDays - (new Date().getDate() - 1);
-    const adjustedDailyRate = remainingDays > 0 ? balance / remainingDays : 0;
+    const adjustedDailyRate = calculateAdjustedDailyRate(
+      balance,
+      messState.settings.cycleStartDate,
+      messState.settings.totalDays
+    );
     return { totalContribution, totalSpent, balance, membersWithExpenses, adjustedDailyRate };
   }, [messState, expenses]);
   const handleDownloadReport = () => {
@@ -242,6 +263,7 @@ const AdminDashboard = ({ messState, adminUser }: AdminDashboardProps) => {
                 <AuditLogsTable
                   auditLogs={messState?.auditLogs || []}
                   onClearLogs={clearAuditLogs}
+                  onClearAll={clearAllAuditLogs}
                   onDownloadLogs={handleDownloadLogs}
                 />
               </CardContent>

@@ -1,17 +1,22 @@
+import { APP_NAME_FILE_PREFIX } from '@shared/app-config';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import type { Member, Expense, AuditLog } from '@shared/types';
 import { DateRange } from 'react-day-picker';
+
 interface MemberWithBalance extends Member {
   totalExpenses: number;
   balance: number;
 }
+
 type AuditLogMutation = (log: Partial<AuditLog>) => void;
+
 const createFileName = (base: string, filtersApplied: boolean) => {
   const dateStr = format(new Date(), 'yyyy-MM-dd');
   const suffix = filtersApplied ? '_filtered' : '';
   return `${base}_${dateStr}${suffix}.xlsx`;
 };
+
 export const exportAdminReport = (
   members: MemberWithBalance[],
   expenses: Expense[],
@@ -20,7 +25,7 @@ export const exportAdminReport = (
 ) => {
   const wb = XLSX.utils.book_new();
   const filtersApplied = filters && (filters.search || filters.dateRange || filters.period !== 'all' || filters.memberId !== 'all' || filters.addedById !== 'all' || filters.minAmount || filters.maxAmount);
-  // Members Sheet
+
   const membersData = members.map(m => ({
     Name: m.name,
     Type: m.type,
@@ -30,7 +35,7 @@ export const exportAdminReport = (
   }));
   const membersWs = XLSX.utils.json_to_sheet(membersData);
   XLSX.utils.book_append_sheet(wb, membersWs, 'Members Summary');
-  // Expenses Sheet
+
   const memberMap = new Map(members.map(m => [m.id, m.name]));
   const expensesData = expenses.map(e => ({
     'Paid By': memberMap.get(e.memberId) || 'Unknown',
@@ -43,11 +48,12 @@ export const exportAdminReport = (
   }));
   const expensesWs = XLSX.utils.json_to_sheet(expensesData);
   XLSX.utils.book_append_sheet(wb, expensesWs, 'Filtered Expenses');
-  // Download
-  const fileName = createFileName('Baraha_Bad_Boys_Mess_Admin_Report', !!filtersApplied);
+
+  const fileName = createFileName(`${APP_NAME_FILE_PREFIX}_Admin_Report`, !!filtersApplied);
   XLSX.writeFile(wb, fileName);
   createAuditLog({ event: 'report_download', metadata: { filters } });
 };
+
 export const exportMemberReport = (
   member: MemberWithBalance,
   expenses: Expense[],
@@ -56,7 +62,7 @@ export const exportMemberReport = (
 ) => {
   const wb = XLSX.utils.book_new();
   const filtersApplied = filters && (filters.search || filters.dateRange || filters.period !== 'all' || filters.minAmount || filters.maxAmount);
-  // Summary Sheet
+
   const summaryData = [{
     Name: member.name,
     Type: member.type,
@@ -66,7 +72,7 @@ export const exportMemberReport = (
   }];
   const summaryWs = XLSX.utils.json_to_sheet(summaryData);
   XLSX.utils.book_append_sheet(wb, summaryWs, 'My Summary');
-  // Expenses Sheet
+
   const expensesData = expenses.map(e => ({
     Date: format(new Date(e.date), 'yyyy-MM-dd'),
     Period: e.period || 'Current',
@@ -75,11 +81,12 @@ export const exportMemberReport = (
   }));
   const expensesWs = XLSX.utils.json_to_sheet(expensesData);
   XLSX.utils.book_append_sheet(wb, expensesWs, 'My Expenses');
-  // Download
-  const fileName = createFileName(`Baraha_Bad_Boys_Mess_${member.name}_Report`, !!filtersApplied);
+
+  const fileName = createFileName(`${APP_NAME_FILE_PREFIX}_${member.name}_Report`, !!filtersApplied);
   XLSX.writeFile(wb, fileName);
   createAuditLog({ event: 'report_download', metadata: { filters } });
 };
+
 export const exportAuditLogs = (logs: AuditLog[]) => {
   const wb = XLSX.utils.book_new();
   const formatEvent = (event: string) => {
@@ -93,6 +100,6 @@ export const exportAuditLogs = (logs: AuditLog[]) => {
   }));
   const logsWs = XLSX.utils.json_to_sheet(logsData);
   XLSX.utils.book_append_sheet(wb, logsWs, 'Audit Logs');
-  const fileName = `Baraha_Bad_Boys_Mess_Audit_Logs_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+  const fileName = `${APP_NAME_FILE_PREFIX}_Audit_Logs_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
   XLSX.writeFile(wb, fileName);
 };
